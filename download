@@ -1,0 +1,5 @@
+#!/bin/bash
+
+python "/home/abhay/Desktop/py/stuffs-downloader/stuff_downloader.py"
+
+

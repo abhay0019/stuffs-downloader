@@ -12,11 +12,14 @@ import copy
 import os
 import commands
 import shutil
-import subprocess as s
+import subprocess as sub
 download_dir=''
 series=''
 season=''
 episode=''
+s,o=commands.getstatusoutput("echo $USER")
+movie_dir="/home/"+o+"/Desktop/py/stuffs-downloader/movies.txt"
+
 def DOM_to_innerHTML(elements):
   vect=[]
   for element in elements:
@@ -164,7 +167,7 @@ def episode(element,driver):
     element=episode_choice(driver)
   if element:
     filename=element.get_attribute('innerHTML')
-    s.call(['notify-send','Downloading .. ',filename])
+    sub.call(['notify-send','Downloading .. ',filename])
     element.click()
     print "Download Started .."
   else:  
@@ -181,8 +184,7 @@ def episode(element,driver):
   print "moving from",src," to ",dest 
   shutil.move(src,dest)
   print "Downloaded .."
-  s.call(['notify-send','Downloaded',filename])
-  driver.close()
+  sub.call(['notify-send','Downloaded',filename])
         
 def get_episode(driver,vect,episode_no):
   if episode_no in range(0,10):
@@ -204,14 +206,14 @@ def episode_list_click(driver,vect,v):
     element=get_episode(driver,vect,i)
     if element:
       filename=element.get_attribute('innerHTML')
-      s.call(['notify-send','Downloading .. ',filename])
+      sub.call(['notify-send','Downloading .. ',filename])
       element.click()
       filenames.append(filename)
       thread=Thread(target=check_existence_and_wait,args=("/home/"+user+"/Downloads",filename))
       thread.start()
       threads.append(thread)
     else:
-      s.call(['notify-send','Error ..',"Episode "+str(i)+" not Present"])
+      sub.call(['notify-send','Error ..',"Episode "+str(i)+" not Present"])
       print "Episode",i,"not Present"
   for i in range(0,len(threads)):
     threads[i].join()
@@ -223,7 +225,7 @@ def episode_list_click(driver,vect,v):
       print "moving from",src," to ",dest 
       shutil.move(src,dest)
     print "Downloaded ..",filename
-    s.call(['notify-send','Downloaded',filename])
+    sub.call(['notify-send','Downloaded',filename])
             
 def check720p(driver,vect):
   if vect[1].get_attribute('innerHTML')=='720p/':
@@ -311,7 +313,7 @@ def entire_season(element,driver):
   for i in range(x,len(vect)):
     element=vect[i]
     filename=element.get_attribute('innerHTML')
-    s.call(['notify-send','Downloading .. ',filename])
+    sub.call(['notify-send','Downloading .. ',filename])
     element.click()
     filenames.append(filename)
     thread=Thread(target=check_existence_and_wait,args=("/home/"+user+"/Downloads",filename))
@@ -329,9 +331,8 @@ def entire_season(element,driver):
       print "moving from",src," to ",dest 
       shutil.move(src,dest)
     print "Downloaded ..",filename
-    s.call(['notify-send','Downloaded',filename])
+    sub.call(['notify-send','Downloaded',filename])
     
-
 def get_season(driver,season_no):
   choice='s'+str(season_no)+'/'
   try:
@@ -388,12 +389,12 @@ def entire_series(element,driver):
     filenames=[]
     threads=[]
     user=get_username()
-    s.call(['notify-send','Starting Download of  ',"Season "+season])
+    sub.call(['notify-send','Starting Download of  ',"Season "+season])
     for j in range(x,len(vect2)):
       #vect2[j].click()
       element=vect2[j]
       filename=element.get_attribute('innerHTML')
-      s.call(['notify-send','Downloading .. ',filename])
+      sub.call(['notify-send','Downloading .. ',filename])
       element.click()
       filenames.append(filename)
       thread=Thread(target=check_existence_and_wait,args=("/home/"+user+"/Downloads",filename))
@@ -408,7 +409,7 @@ def entire_series(element,driver):
         print "moving from",src," to ",dest 
         shutil.move(src,dest)  
       print "Downloaded ..",filename
-      s.call(['notify-send','Downloaded',filename])
+      sub.call(['notify-send','Downloaded',filename])
     vect2[0].click()
     if fl==1:
       vect2=driver.find_elements_by_xpath('//tr/td/a')
@@ -419,7 +420,8 @@ def ask_for_display():
   gp=re.search('Xvfb',o)
   if not gp:
     os.system("Xvfb :99 &")
-  inp=raw_input("Want the GUI of entire browser?(y/n)")
+    time.sleep(1)
+  inp=raw_input("\n\nWant the GUI of entire browser?(y/n)")
   if inp.lower()=='y':
     os.environ['DISPLAY']=":0.0"
   elif inp=='n':
@@ -431,7 +433,7 @@ def ask_for_proxy():
 
 def ask_for_download_folder():
   global download_dir
-  f=open("download.conf","r")
+  f=open("/home/abhay/Desktop/py/stuffs-downloader/download.conf","r")
   path=f.read()
   gp=re.search('[^\s].*',path)
   if gp:
@@ -452,7 +454,6 @@ def download_series(name):
   global season
   global series
   global episode
-  ask_for_display()
   ask_for_download_folder()
   global download_dir
   ask_for_proxy()
@@ -503,8 +504,214 @@ def download_series(name):
     print "Okay Bye !!"
     sys.exit()
   driver.close()
-
+def is_dir(element):
+  inner=element.get_attribute('innerHTML')
+  if inner[-1]=='/':
+    return True
+  else:
+    return False
+      
+def traverse(driver,element,i):
+  global movie_dir 
+  element.click()
+  elements=driver.find_elements_by_tag_name('a')
+  elements_innerHTML=DOM_to_innerHTML(elements)
+  ind=precise(elements_innerHTML)
+  elements_innerHTML=elements_innerHTML[ind:]
+  elements=elements[ind:]
+  #print movie_dir
+  f=open(movie_dir,"a")
+  for i in range(1,len(elements)):
+    if is_dir(elements[i]):
+      elements=traverse(driver,elements[i],i)
+      elements[0].click()
+      elements=driver.find_elements_by_tag_name('a')
+      elements_innerHTML=DOM_to_innerHTML(elements)
+      ind=precise(elements_innerHTML)
+      elements_innerHTML=elements_innerHTML[ind:]
+      elements=elements[ind:]
+    else:
+      f.write(elements[i].get_attribute('innerHTML')+"====>"+elements[i].get_attribute('href')+"\n")
+  f.close()  
+  return elements
+  
+def precise(vect):
+  return vect.index('Parent directory/')
+         
+def update_directory(driver):
+  global movie_dir 
+  elements=driver.find_elements_by_tag_name('a')
+  elements_innerHTML=DOM_to_innerHTML(elements)
+  ind=precise(elements_innerHTML)
+  elements_innerHTML=elements_innerHTML[ind:]
+  elements=elements[ind:]
+  f=open(movie_dir,"w")
+  f.write('')
+  f.close()
+  for i in reversed(range(1,len(elements))):
+    #print elements[i].get_attribute('innerHTML')
+    print "Updating database for year : ",elements[i].get_attribute('innerHTML')
+    elements=traverse(driver,elements[i],i)
+    elements[0].click()
+    elements=driver.find_elements_by_tag_name('a')
+    elements_innerHTML=DOM_to_innerHTML(elements)
+    ind=precise(elements_innerHTML)
+    elements_innerHTML=elements_innerHTML[ind:]
+    elements=elements[ind:]
+  with open(movie_dir,"a") as f:
+    f.write("xx--END--xx\n")
+    
+def get_formatted_name(path):
+  vect=[]
+  if os.path.isfile(path):
+    f=open(path,"r")
+    for line in f:
+      vect.append(line.split('====>'))  
+    for i in range(0,len(vect)-1):
+      vect[i][0]=' '.join(vect[i][0].split('.'))
+      vect[i][0]=' '.join(vect[i][0].split('_'))
+      vect[i][0]=vect[i][0].lower()
+    return vect
+  else:
+    print "No Such File "+path
+    return None
+         
+def ask_for_download_folder_movie():
+  global download_dir
+  f=open("/home/abhay/Desktop/py/stuffs-downloader/download_movie.conf","r")
+  path=f.read()
+  gp=re.search('[^\s].*',path)
+  if gp:
+    path=gp.group()
+  else:
+    print "Not a Right Way to specify a Path ..\nSet the path to download in download.conf"
+    sys.exit()  
+  f.close()
+  if path=='.':
+    download_dir=os.getcwd()
+  elif os.path.isdir(path):
+    download_dir=path
+  else:
+    print "Given path is not a directory ..\nSet the path to download in download.conf"
+    sys.exit()
+  
+def download_movie(name):
+  global movie_dir
+  ask_for_download_folder_movie()
+  ask_for_proxy()
+  name=name.lower() 
+  choice=raw_input('Wanna update the old directory (Note :This may take few minutes)?(y/n)')
+  path,filename=os.path.split(movie_dir)
+  if choice.lower()=='y':
+    driver = webdriver.Chrome(executable_path="/home/abhay/Desktop/py/stuffs-downloader/chromedriver") 
+    driver.implicitly_wait(60)
+    driver.get("http://s1.bia2m.biz/Movies/Archive/")
+    update_directory(driver)
+    print "Directory Updated .."
+    driver.close()
+     
+  stat,o=commands.getstatusoutput("tail -1 "+movie_dir)
+  
+  if o!="xx--END--xx":
+    f=open(movie_dir,"r+")
+    f1=open(os.path.join(path,"temp_movie.txt"),"r+")
+    offset=0
+    for line1,line2 in zip(f,f1):
+      offset+=len(line1)
+    f1.seek(offset)
+    f.seek(offset)
+    after=f1.read()
+    f.write(after)
+    f.close()
+    f1.close()
+    f=open(movie_dir,"r")
+    f1=open(os.path.join(path,"temp_movie.txt"),"w")
+    f1.write(f.read())
+    f1.close()
+    f.close()  
+  else:
+    with open(movie_dir,"r") as f:
+      f1=open(os.path.join(path,"temp_movie.txt"),"w")
+      f1.write(f.read())
+      f1.close()
+      
+  names=Name_to_list(name)
+  real_movies=[]
+  if os.path.isfile(movie_dir):
+    f=open(movie_dir,"r")
+    for line in f:
+      real_movies.append(line.split('====>'))
+  else:
+    print "No such path : ",movie_dir
+    sys.exit()
+  
+  real_movies=real_movies[:-1]      
+  movies=get_formatted_name(movie_dir)
+  movies_names=[]
+  for i in range(0,len(movies)):
+    movies_names.append(movies[i][0])
+  best__match=best_match(names,movies_names)
+  ind = -1
+  if len(best__match)==0:
+    print "\n\nBad Search Keyword .. Try Again .."
+    return
+  elif len(best__match)==1:
+    ind=0
+    print "\n\nSearch Result : ",real_movies[best__match[ind]][0],"\n\n"  
+  else:
+    print "\n\nFew Results on the basis of your search .. Choose one .. ;) \n\n"
+    for i in range(0,len(best__match)):
+      print i+1,")",real_movies[best__match[i]][0]
+    ind=raw_input()
+    ind=int(ind)-1
+    print "You Chose : ",real_movies[best__match[ind]][0],"\n"
+  print "Should I download?(y/n)"
+  choice=raw_input()
+  if choice.lower()=='y':
+    driver = webdriver.Chrome(executable_path="/home/abhay/Desktop/py/stuffs-downloader/chromedriver") 
+    driver.implicitly_wait(60)
+    sub.call(["notify-send","Downloading..",real_movies[best__match[ind]][0]])
+    driver = webdriver.Chrome(executable_path="/home/abhay/Desktop/py/stuffs-downloader/chromedriver") 
+    driver.implicitly_wait(60)
+    driver.get(real_movies[best__match[ind]][1])
+    filename=real_movies[best__match[ind]][0]
+    user=get_username()  
+    thread=Thread(target=check_existence_and_wait,args=("/home/"+user+"/Downloads",filename))
+    thread.start()
+    thread.join()
+    src="/home/"+user+"/Downloads/"+filename
+    global download_dir
+    print "finally..",download_dir
+    dest=download_dir+"/"+filename
+    if not os.path.isdir(dest):
+      os.mkdir(dest)
+    dest=os.path.join(dest,filename)  
+    print "moving from",src," to ",dest 
+    shutil.move(src,dest)
+    print "Downloaded .."
+    sub.call(['notify-send','Downloaded',filename])
+    driver.close()
+  else:
+    print "Bye THen :) .."
+    return
+      
 if __name__=='__main__':
-  print "Enter the name of Series .."
-  name=raw_input() 
-  download_series(name)  
+
+  while True:
+    choice=raw_input('\n\nChoice :-\n1)Movies\n2)TvSeries\n3)Exit\n')
+    if choice=='1':
+      print "Enter the name of Movie .."
+      name=raw_input()
+      ask_for_display() 
+      download_movie(name)      
+    elif choice=='2':  
+      print "Enter the name of Series .."
+      name=raw_input() 
+      ask_for_display()
+      download_series(name)
+    elif choice=='3':
+      print "Bye bYe :) "
+      sys.exit()  
+    else:
+      print "Wrong Choice .. Try again !!"     
+

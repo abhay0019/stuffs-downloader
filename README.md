@@ -35,4 +35,21 @@ A well Informative Session will start , User can follow it very easily ..
  
 
 
+New Commit :- Added extra feature for downloading movies too .
+
+Information for using updates :-
+
+Update the download_movie.conf by entering the complete path to the  directory , you want your download to be stored .. 
+
+Added shell script file (download) should be copied to ~/bin directory for easier download-procedure :-
+
+Instructions to add shell script file (download) :-
+
+1)Copy the download file to ~/bin directory
+2)Give it execute permission (use command :- chmod +x ~/bin/download) 
+3)Set PATH variable (export PATH=$PATH:~/bin)
+4)Now you can easily execute the script from any location by just typing the command :-  download
+
+
+
 
