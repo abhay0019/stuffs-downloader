@@ -433,7 +433,7 @@ def ask_for_proxy():
 
 def ask_for_download_folder():
   global download_dir
-  f=open("/home/abhay/Desktop/py/stuffs-downloader/download.conf","r")
+  f=open("/home/"+get_username()+"/Desktop/py/stuffs-downloader/download.conf","r")
   path=f.read()
   gp=re.search('[^\s].*',path)
   if gp:
@@ -458,7 +458,7 @@ def download_series(name):
   global download_dir
   ask_for_proxy()
   name=name.lower() 
-  driver = webdriver.Chrome(executable_path="/home/abhay/Desktop/py/stuffs-downloader/chromedriver") 
+  driver = webdriver.Chrome(executable_path="/home/"+get_username()+"/Desktop/py/stuffs-downloader/chromedriver") 
   driver.implicitly_wait(60)
   driver.get("http://s1.bia2m.biz/Series/")
   elements=driver.find_elements_by_tag_name('a')
@@ -578,7 +578,7 @@ def get_formatted_name(path):
          
 def ask_for_download_folder_movie():
   global download_dir
-  f=open("/home/abhay/Desktop/py/stuffs-downloader/download_movie.conf","r")
+  f=open("/home/"+get_username()+"/Desktop/py/stuffs-downloader/download_movie.conf","r")
   path=f.read()
   gp=re.search('[^\s].*',path)
   if gp:
@@ -603,7 +603,7 @@ def download_movie(name):
   choice=raw_input('Wanna update the old directory (Note :This may take few minutes)?(y/n)')
   path,filename=os.path.split(movie_dir)
   if choice.lower()=='y':
-    driver = webdriver.Chrome(executable_path="/home/abhay/Desktop/py/stuffs-downloader/chromedriver") 
+    driver = webdriver.Chrome(executable_path="/home/"+get_username()+"/Desktop/py/stuffs-downloader/chromedriver") 
     driver.implicitly_wait(60)
     driver.get("http://s1.bia2m.biz/Movies/Archive/")
     update_directory(driver)
@@ -668,10 +668,10 @@ def download_movie(name):
   print "Should I download?(y/n)"
   choice=raw_input()
   if choice.lower()=='y':
-    driver = webdriver.Chrome(executable_path="/home/abhay/Desktop/py/stuffs-downloader/chromedriver") 
+    driver = webdriver.Chrome(executable_path="/home/"+get_username()+"/Desktop/py/stuffs-downloader/chromedriver") 
     driver.implicitly_wait(60)
     sub.call(["notify-send","Downloading..",real_movies[best__match[ind]][0]])
-    driver = webdriver.Chrome(executable_path="/home/abhay/Desktop/py/stuffs-downloader/chromedriver") 
+    driver = webdriver.Chrome(executable_path="/home/"+get_username()+"/Desktop/py/stuffs-downloader/chromedriver") 
     driver.implicitly_wait(60)
     driver.get(real_movies[best__match[ind]][1])
     filename=real_movies[best__match[ind]][0]
